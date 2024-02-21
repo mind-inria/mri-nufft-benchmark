@@ -4,3 +4,4 @@ matplotlib
 numpy
 hydra-core
 hydra-callbacks
+mri-nufft>=0.#6.0
