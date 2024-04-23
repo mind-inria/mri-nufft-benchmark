@@ -9,7 +9,8 @@ data:
   smaps: true
   dtype: "complex64"
 
-trajectory: "trajs/trajectory_stack_of_spirals.bin"
+trajectory: "../trajs/stack_of_spirals.bin"
+
 task:
   - forward
   - adjoint

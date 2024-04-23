@@ -9,7 +9,7 @@ data:
   smaps: false
   dtype: "complex64"
 
-trajectory: "trajs/trajectory_floret.bin"
+trajectory: "../trajs/floret.bin"
 task:
   - forward
   - adjoint

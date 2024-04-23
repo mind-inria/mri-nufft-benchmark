@@ -14,7 +14,6 @@ from hydra_callbacks.logger import PerfLogger
 from hydra_callbacks.monitor import ResourceMonitorService
 from modopt.math.metrics import snr, ssim
 from modopt.opt.linear import Identity
-from modopt.opt.proximity import SparseThreshold
 
 from mrinufft import get_operator
 from mrinufft.trajectories.density import voronoi
@@ -27,7 +26,7 @@ from solver_utils import get_grad_op, OPTIMIZERS, initialize_opt, WaveletTransfo
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path=".", config_name="ismrm2024")
+@hydra.main(version_base=None, config_path="qual", config_name="ismrm2024")
 def main(cfg):
     """Run benchmark of iterative reconstruction."""
     traj, params = read_trajectory(str(Path(__file__).parent / (cfg.trajectory.file)))
