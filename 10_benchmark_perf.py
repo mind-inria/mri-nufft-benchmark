@@ -116,7 +116,8 @@ def main_app(cfg: DictConfig) -> None:
         "dim": len(nufft.shape),
         "sense": nufft.uses_sense,
     }
-    result_file = f"{cfg.backend.name}_{cfg.backend.upsampfac}_{cfg.backend.eps}_{cfg.data.n_coils}.csv"
+    trajectory_name = cfg.trajectory.split("/")[-1].split("_")[0]
+    result_file = f"{cfg.backend.name}_{cfg.backend.upsampfac}_{trajectory_name}_{cfg.backend.eps}_{cfg.data.n_coils}.csv"
     for task in cfg.task:
         tic = time.perf_counter()
         toc = tic
