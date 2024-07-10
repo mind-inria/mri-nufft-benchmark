@@ -166,3 +166,6 @@ cpx_cartesian.npy
 # trajectory
 trajs/
 trajs/*.bin
+
+# mes outputs and logs
+outputs/

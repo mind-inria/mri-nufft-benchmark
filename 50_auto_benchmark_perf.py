@@ -13,9 +13,9 @@ backend_names = [  # mrinufft of course
     # "torchkbnufft-gpu",  # torchkbnufft, torch
 ]
 trajectories = [
-    "./trajs/floret_200x256x256_0.5.bin",
-    "./trajs/seiffert_200x256x256_0.5.bin",
-    "./trajs/stack_of_spiral_200x256x256_0.5.bin",
+    "./trajs/floret_176x256x256_0.5.bin",
+    "./trajs/seiffert_176x256x256_0.5.bin",
+    "./trajs/stack_of_spiral_176x256x256_0.5.bin",
 ]
 n_coils_list = [1, 12, 32]
 

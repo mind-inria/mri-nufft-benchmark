@@ -26,12 +26,12 @@ if __name__ == "__main__":
     FOV = np.array(SHAPE3D) * args.res
 
     base_string = f"{SHAPE3D[0]}x{SHAPE3D[1]}x{SHAPE3D[2]}_{args.res}"
+
     # Stack of Spiral
     stack_of_spiral = stack(initialize_2D_spiral(Nc=64, Ns=10240, nb_revolutions=7),nb_stacks=208)
     write_trajectory(stack_of_spiral, FOV, SHAPE3D, os.path.join("trajs", f"stack_of_spiral_{base_string}"))
 
     # Floret
-
     floret = initialize_3D_floret(Nc=3994//6, Ns=10240, nb_revolutions=6)
     write_trajectory(floret, FOV, SHAPE3D, os.path.join("trajs", f"floret_{base_string}"))
 
