@@ -162,3 +162,7 @@ cython_debug/
 
 # cpx data
 cpx_cartesian.npy
+
+# trajectory
+trajs/
+trajs/*.bin
