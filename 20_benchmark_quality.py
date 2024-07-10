@@ -16,8 +16,8 @@ from modopt.math.metrics import snr, ssim
 from modopt.opt.linear import Identity
 
 from mrinufft import get_operator
-from mrinufft.trajectories.density import voronoi
-from mrinufft.trajectories.io import read_trajectory
+from mrinufft.density import voronoi
+from mrinufft.io import read_trajectory
 
 from mri.operators.proximity import AutoWeightedSparseThreshold
 
