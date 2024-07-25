@@ -5,19 +5,21 @@ import os
 
 # Define parameter lists and dependencies to install before running this script
 backend_names = [  # mrinufft of course
-    "finufft",  # finufft
-    # "gpunufft",  # gpuNUFFT, cupy-cuda11x
-    # "cufinufft",  # cufinufft, cupy-cuda11x
-    # "tensorflow",  # tensorflow, cupy-cuda11x, tensorflow_nufft, tensorflow_mri => start by tensorflow_mri
+    # "finufft",  # finufft
+    "gpunufft",  # gpuNUFFT, cupy-cuda11x
+    "cufinufft",  # cufinufft, cupy-cuda11x
+    "tensorflow",  # tensorflow, cupy-cuda11x, tensorflow_nufft, tensorflow_mri => start by tensorflow_mri
     # "torchkbnufft-cpu",  # torchkbnufft, torch
-    # "torchkbnufft-gpu",  # torchkbnufft, torch
+    "torchkbnufft-gpu",  # torchkbnufft, torch
 ]
 trajectories = [
-    "./trajs/floret_176x256x256_0.5.bin",
-    "./trajs/seiffert_176x256x256_0.5.bin",
-    "./trajs/stack_of_spiral_176x256x256_0.5.bin",
+    "./trajs/floret_256x256x176_0.5.bin",
+    "./trajs/seiffert_256x256x176_0.5.bin",
+    "./trajs/stack_of_spiral_256x256x176_0.5.bin",
+    # "./trajs/radial_256x256_0.5.bin",
+    # "./trajs/stack2D_of_spiral_256x256_0.5.bin"
 ]
-n_coils_list = [1, 12, 32]
+n_coils_list = [12]
 
 # Read the base configuration file to copy from
 with open("./perf/benchmark_config.yaml", "r") as file:
@@ -53,7 +55,7 @@ for backend_name, trajectory, n_coils in combinations:
         ]
     )
 
-# Clean up temporary configuration files after execution (comment out to keep them)
-for temp_config_file in os.listdir("temp_configs"):
-    os.remove(os.path.join("temp_configs", temp_config_file))
+for file in os.listdir("temp_configs"):
+    complete_file = os.path.join("temp_configs", file)
+    os.remove(complete_file)
 os.removedirs("temp_configs")

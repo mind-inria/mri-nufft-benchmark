@@ -17,6 +17,5 @@ To fully reproduce the  benchmarks 4 steps are necessary:
  - The Quality benchmark that check how the pair trajectory/backend performs for the reconstruction. in `qual` folder
 3. Generate some analysis figures using `perf_analysis.py`
 
-
-
-
+![result2D](result2D.png)
+![result3D](result3D.png)

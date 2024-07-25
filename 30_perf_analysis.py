@@ -1,32 +1,29 @@
 import argparse
 import pandas as pd
-import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib
 import glob
-from collections import defaultdict
 
 sns.set_theme()
 
 # Parse command-line arguments
-parser = argparse.ArgumentParser(description='Generate benchmark plots and save to specified file.')
-parser.add_argument('output_filename', type=str, help='Name of the output file (without extension).')
+parser = argparse.ArgumentParser(
+    description="Generate benchmark plots and save to specified file."
+)
+parser.add_argument(
+    "output_filename", type=str, help="Name of the output file (without extension)."
+)
 args = parser.parse_args()
 
 # Replace with correct directory
 BENCHMARK_DIR = "./outputs"
 results_files = glob.glob(BENCHMARK_DIR + "/**/**/*.csv", recursive=True)
-# print(results_files)
-
-# You can specify the path directly (more specific or for only one file)
-# results_files = ["file_path.csv"]
 
 df = pd.concat(map(pd.read_csv, results_files))
 df["coil_time"] = df["run_time"] / df["n_coils"]
 df["coil_mem"] = df["mem_peak"] / df["n_coils"]
 df = df.sort_values(["backend"], ascending=False)
-
 
 fig, axs = plt.subplots(
     3, 3, sharey=True, figsize=(16, 9), gridspec_kw=dict(hspace=0.01, wspace=0.05)
@@ -37,31 +34,24 @@ metrics = {
     "mem_peak": "Peak RAM (GB)",
     "gpu0_mem_GiB_peak": "Peak GPU Mem (GB)",
 }
-palette = {k: v for k, v in zip(metrics.keys(), ["magma", "rocket", "mako"])}
 
-# Calculate maximum values for each metric
-max_coil_time = df["coil_time"].max()
-max_mem_peak = df["mem_peak"].max()
-max_gpu_mem_peak = df["gpu0_mem_GiB_peak"].max()
+# Custom palette with specified colors
+custom_palette = {1: "black", 12: "darkblue", 32: "purple"}
+
 
 # Define x-axis limits for each metric
-# xlims = {k: v for k, v in zip(metrics.keys(), [(0, 10), (0, 80), (0, 8)])}
-xlims = {
-    "coil_time": (0, max_coil_time),
-    "mem_peak": (0, max_mem_peak),
-    "gpu0_mem_GiB_peak": (0, max_gpu_mem_peak),
-}
+xlims = {k: v for k, v in zip(metrics.keys(), [(0, 5), (0, 80), (0, 20)])}
 
 # Generate bar plots for each task and metric
 for row, task in zip(axs, tasks):
     ddf = df[df["task"] == task]
-    for ax, (k, p) in zip(row, palette.items()):
+    for ax, (k) in zip(row, metrics.keys()):
         sns.barplot(
             ddf,
             x=k,
             y="backend",
             hue="n_coils",
-            palette=p,
+            palette=custom_palette,
             ax=ax,
             errorbar=None,
             width=0.8,
@@ -70,6 +60,13 @@ for row, task in zip(axs, tasks):
         ax.set_ylabel("")
         ax.set_xlabel("")
         ax.set_xticklabels("")
+
+        max_limit = xlims[k][1]
+        for container in ax.containers:
+            labels = [
+                f"{v:.1f}" if v >= max_limit else "" for v in container.datavalues
+            ]
+            ax.bar_label(container, labels=labels, label_type="center", color="white", fontsize=6)
 
 
 # Labels
@@ -96,9 +93,9 @@ for col_ax, xlim in zip(axs.T, xlims.values()):
         ax.set_xlim(xlim)
         xticks = ax.get_xticks()
         ax.set_xticks(xticks)
-        ax.set_xticklabels([f"{xt:.0f}" for xt in xticks])
+    ax.set_xticklabels([f"{xt:.1f}" for xt in xticks])
 
 # Save the figure to the specified directory with the provided filename
-output_file = f"./outputs/{args.output_filename}.png"
+output_file = BENCHMARK_DIR + f"/{args.output_filename}.png"
 plt.savefig(output_file)
 plt.show()
