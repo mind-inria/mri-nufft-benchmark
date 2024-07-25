@@ -66,7 +66,9 @@ for row, task in zip(axs, tasks):
             labels = [
                 f"{v:.1f}" if v >= max_limit else "" for v in container.datavalues
             ]
-            ax.bar_label(container, labels=labels, label_type="center", color="white", fontsize=6)
+            ax.bar_label(
+                container, labels=labels, label_type="center", color="white", fontsize=6
+            )
 
 
 # Labels

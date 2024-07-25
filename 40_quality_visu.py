@@ -23,13 +23,13 @@ for idx, file_path in enumerate(results_files):
 
     if data.ndim == 3:
         mid_slice = data.shape[0] // 2
-        ax.imshow(data[mid_slice], cmap='gray')
-        ax.set_title(f'{file_name}\nSlice au milieu ({mid_slice})')
+        ax.imshow(data[mid_slice], cmap="gray")
+        ax.set_title(f"{file_name}\nSlice au milieu ({mid_slice})")
     else:
-        ax.imshow(data, cmap='gray')
+        ax.imshow(data, cmap="gray")
         ax.set_title(file_name)
 
-    ax.axis('off') 
+    ax.axis("off")
 
 
 for idx in range(num_files, grid_size * grid_size):
