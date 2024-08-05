@@ -1,3 +1,22 @@
+"""
+This script generates benchmark configurations for different MRI reconstruction backends and trajectories, 
+executes the benchmarking script, and cleans up temporary configuration files.
+
+Usage:
+    1. Ensure that all necessary backends are installed and accessible.
+    2. Run 'python auto_benchmark_perf.py'
+
+The script performs the following tasks:
+    - Reads a base configuration file (`benchmark_config.yaml`) that defines default settings.
+    - Generates all combinations of backend names, trajectories, and number of coils specified.
+    - For each combination, it creates a temporary YAML configuration file.
+    - Calls the benchmark script with the generated configuration.
+    - Cleans up by deleting all temporary configuration files after execution.
+
+Note:
+    The benchmark script should be designed to accept a configuration file path as an argument.
+"""
+
 import itertools
 import subprocess
 import yaml
@@ -37,7 +56,7 @@ for backend_name, trajectory, n_coils in combinations:
     config["trajectory"] = trajectory
     config["data"]["n_coils"] = n_coils
 
-    temp_config_path = f"temp_configs"
+    temp_config_path = "temp_configs"
     temp_config_file = f"config_{backend_name}_{trajectory.split('/')[-1].split('.')[0]}_{n_coils}.yaml"
 
     complete_file = os.path.join(temp_config_path, temp_config_file)
@@ -55,6 +74,7 @@ for backend_name, trajectory, n_coils in combinations:
         ]
     )
 
+# Clean up temporary configuration files
 for file in os.listdir("temp_configs"):
     complete_file = os.path.join("temp_configs", file)
     os.remove(complete_file)

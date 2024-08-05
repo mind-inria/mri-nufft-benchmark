@@ -1,8 +1,16 @@
-"""Benchmark for quality of reconstruction.
-
-Requires PySAP-MRI to be installed.
-
 """
+Benchmark for quality of reconstruction.
+
+This script benchmarks the quality of MRI reconstruction using various algorithms and trajectories. 
+It requires PySAP-MRI to be installed and uses several libraries to measure performance and quality metrics such as SSIM and SNR.
+
+Usage:
+    python benchmark.py --config-name ismrm2024
+
+Output:
+    Saves reconstructed images and quality metrics in JSON format.
+"""
+
 import json
 import logging
 import os
@@ -18,22 +26,24 @@ from modopt.opt.linear import Identity
 from mrinufft import get_operator
 from mrinufft.density import voronoi
 from mrinufft.io import read_trajectory
-
 from mri.operators.proximity import AutoWeightedSparseThreshold
 
 from solver_utils import get_grad_op, OPTIMIZERS, initialize_opt, WaveletTransform
 
+# Initialize logger
 logger = logging.getLogger(__name__)
 
 
 @hydra.main(version_base=None, config_path="qual", config_name="ismrm2024")
 def main(cfg):
     """Run benchmark of iterative reconstruction."""
+    # Read and preprocess trajectory data
     traj, params = read_trajectory(str(Path(__file__).parent / (cfg.trajectory.file)))
     traj = np.float32(traj)
     shape = tuple(params["img_size"])
     ref_data = np.load(Path(__file__).parent / cfg.ref_data)
 
+    # Check for shape consistency
     if ref_data.shape != shape:
         raise ValueError("shape mismatch between reference data and trajectory.")
 
@@ -41,6 +51,7 @@ def main(cfg):
     cache_dir = Path(__file__).parent / cfg.cache_dir
     ksp_file = cache_dir / f"{traj_base}_ksp.npy"
     try:
+        # Try to load cached k-space data
         ksp_data = np.load(ksp_file)
     except FileNotFoundError:
         # Generate the kspace data with high precision nufft and cache it.
@@ -77,7 +88,7 @@ def main(cfg):
         squeeze_dims=True,
     )
 
-    # Setup the operators
+    # Setup linear operator and regularizer
     linear_op = WaveletTransform(
         wavelet_name=cfg.solver.wavelet.base,
         shape=shape,
@@ -96,6 +107,7 @@ def main(cfg):
         thresh_type="soft",
     )
 
+    # Setup gradient operator and solver
     grad_op = get_grad_op(
         fourier_op,
         OPTIMIZERS[cfg.solver.optimizer],
@@ -113,7 +125,7 @@ def main(cfg):
     logger.info(f"Grad inv spec rad {grad_op.inv_spec_rad}")
     backend_sig = f"{cfg.backend.name}_{cfg.backend.eps:.0e}_{cfg.backend.upsampfac}"
 
-    # Start Reconstruction
+    # Start Reconstruction process
     with (
         ResourceMonitorService(
             interval=cfg.monitor.interval, gpu_monit=cfg.monitor.gpu
@@ -126,10 +138,12 @@ def main(cfg):
         else:
             x_final = solver.x_final
         image_rec = np.abs(x_final)
-        # Calculate SSIM
+
+        # Calculate SSIM and SNR (quality metrics)
         recon_ssim = ssim(image_rec, ref_data)
         recon_snr = snr(image_rec, ref_data)
 
+    # Save the reconstructed image
     np.save(f"recon_{backend_sig}_{traj_base}.npy", image_rec)
     logger.info(f"{backend_sig}")
     logger.info(f"SSIM, SNR: {recon_ssim}, {recon_snr}")
@@ -144,6 +158,7 @@ def main(cfg):
     }
     monit_values = monit.get_values()
 
+    # Collect resource monitoring data
     results["mem_peak"] = np.max(monit_values["rss_GiB"])
     results["run_time"] = perflog.get_timer(backend_sig)
     if cfg.monitor.gpu:
@@ -152,6 +167,7 @@ def main(cfg):
             results[f"{k}_avg"] = np.mean(monit_values[k])
             results[f"{k}_peak"] = np.max(monit_values[k])
 
+    # Save the results to a JSON file
     with open(f"results_{backend_sig}.json", "w") as f:
         json.dump(results, f)
 

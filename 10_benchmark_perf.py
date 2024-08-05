@@ -1,9 +1,18 @@
 """
 Benchmark script using hydra.
 
-Run it with python benchmark.py --config-name ismrm2024 to reproduce results of abstract.
+Run it with python 10_benchmark.py --config-name ismrm2024 to reproduce results of abstract.
 
+This script benchmarks different MRI reconstruction algorithms using various 3D trajectories.
+It initializes data, sets up the necessary configurations, and runs benchmarks while monitoring performance.
+
+Usage:
+    python 10_benchmark.py --config-name config_name
+
+Output:
+    Performance metrics and results saved in CSV files.
 """
+
 import csv
 import logging
 import os
@@ -21,15 +30,17 @@ from omegaconf import DictConfig
 
 AnyShape = tuple[int, int, int]
 
-
+# Check for CUPY availability for GPU support
 CUPY_AVAILABLE = True
 try:
     import cupy as cp
 except ImportError:
     CUPY_AVAILABLE = False
 
+# Initialize logger
 logger = logging.getLogger(__name__)
 
+# Suppress specific warnings from mrinufft module
 warnings.filterwarnings(
     "ignore",
     "Samples will be rescaled to .*",
@@ -40,7 +51,7 @@ warnings.filterwarnings(
 
 def get_data(cfg):
     """Initialize all the data for the benchmark."""
-    # trajectory init
+    # Initialize trajectory
     if cfg.trajectory.endswith(".bin"):
         trajectory, params = read_trajectory(
             str(Path(__file__).parent / cfg.trajectory)
@@ -55,25 +66,27 @@ def get_data(cfg):
     XYZ = tuple(params["img_size"])
     K = np.prod(trajectory.shape[:-1])
 
+    # Load or generate data
     if data_file := getattr(cfg.data, "file", None):
         data = np.load(data_file)
         if data.shape != XYZ:
             logger.warning("mismatched shape between data and trajectory file.")
-
     else:
         data = (1j * np.random.rand(*XYZ)).astype(cpx_type)
         data += np.random.rand(*XYZ).astype(cpx_type)
-        # kspace data
+
+    # Generate k-space data
     ksp_data = 1j * np.random.randn(C, K).astype(cpx_type)
     ksp_data += np.random.randn(C, K).astype(cpx_type)
 
+    # Initialize sensitivity maps
     smaps = None
     if cfg.data.n_coils > 1:
         smaps_true = get_smaps(XYZ, C)
         if cfg.data.smaps:
             smaps = smaps_true
         else:
-            # expand the data to multicoil
+            # Expand the data to multicoil
             data = data[None, ...] * smaps_true
 
     return (data, ksp_data, trajectory, smaps, XYZ, C)
@@ -87,12 +100,15 @@ def get_data(cfg):
 def main_app(cfg: DictConfig) -> None:
     """Run the benchmark."""
     # TODO Add a DSL like bart::extra_args:value::extra_arg2:value2 etc
-    nufftKlass = get_operator(cfg.backend.name)
 
+    # Initialize the NUFFT operator
+    nufftKlass = get_operator(cfg.backend.name)
     data, ksp_data, trajectory, smaps, shape, n_coils = get_data(cfg)
     logger.debug(
         f"{data.shape}, {ksp_data.shape}, {trajectory.shape}, {n_coils}, {shape}"
     )
+
+    # Set up resource monitoring
     monit = ResourceMonitorService(
         interval=cfg.monitor.interval, gpu_monit=cfg.monitor.gpu
     )
@@ -118,6 +134,8 @@ def main_app(cfg: DictConfig) -> None:
     }
     trajectory_name = cfg.trajectory.split("/")[-1].split("_")[0]
     result_file = f"{cfg.backend.name}_{cfg.backend.upsampfac}_{trajectory_name}_{cfg.backend.eps}_{cfg.data.n_coils}.csv"
+
+    # Run benchmark tasks
     for task in cfg.task:
         tic = time.perf_counter()
         toc = tic
@@ -161,6 +179,7 @@ def main_app(cfg: DictConfig) -> None:
                     monit_values[f"{k}_avg"] = np.mean(values[k])
                     monit_values[f"{k}_peak"] = np.max(values[k])
 
+            # Save benchmark results to CSV file
             with open(result_file, "a") as f:
                 row_dict = run_config | monit_values
                 writer = csv.DictWriter(f, fieldnames=row_dict.keys())
@@ -192,6 +211,13 @@ def get_smaps(
         name of the antenna to emulate. Only "birdcage" is currently supported.
     dtype
         return datatype for the sensitivity maps.
+    cachedir : str
+        Directory to cache the sensitivity maps.
+
+    Returns
+    -------
+    np.ndarray
+        Complex sensitivity profiles.
     """
     if antenna == "birdcage":
         try:
@@ -212,17 +238,19 @@ def _birdcage_maps(
 
     Parameters
     ----------
-    shape
-        sensitivity maps shape (nc, x,y,z)
-    r
+    shape : tuple
+        Sensitivity maps shape (nc, x, y, z).
+    r : float
         Relative radius of birdcage.
-    nzz
-        number of coils per ring.
-    dtype
+    nzz : int
+        Number of coils per ring.
+    dtype : np.dtype
+        Data type of the output.
 
     Returns
     -------
-    np.ndarray: complex sensitivity profiles.
+    np.ndarray
+        Complex sensitivity profiles.
 
     References
     ----------
@@ -245,7 +273,7 @@ def _birdcage_maps(
     x_co = (x - nx / 2.0) / (nx / 2.0) - coilx
     y_co = (y - ny / 2.0) / (ny / 2.0) - coily
     z_co = (z - nz / 2.0) / (nz / 2.0) - coilz
-    rr = (x_co ** 2 + y_co ** 2 + z_co ** 2) ** 0.5
+    rr = (x_co**2 + y_co**2 + z_co**2) ** 0.5
     phi = np.arctan2(x_co, -y_co) + coil_phs
     out = (1 / rr) * np.exp(1j * phi)
 

@@ -1,3 +1,12 @@
+"""
+This script generates benchmark plots from CSV files containing performance metrics.
+
+The generated plots are saved as a PNG file with the specified filename.
+
+Usage:
+    python 30_perf_analysis.py <output_filename>
+"""
+
 import argparse
 import pandas as pd
 import seaborn as sns
@@ -16,15 +25,19 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-# Replace with correct directory
+# Directory where benchmark result files are stored
 BENCHMARK_DIR = "./outputs"
 results_files = glob.glob(BENCHMARK_DIR + "/**/**/*.csv", recursive=True)
 
+# Read and concatenate all CSV files into a single DataFrame
 df = pd.concat(map(pd.read_csv, results_files))
+
+# Calculate additional metrics
 df["coil_time"] = df["run_time"] / df["n_coils"]
 df["coil_mem"] = df["mem_peak"] / df["n_coils"]
 df = df.sort_values(["backend"], ascending=False)
 
+# Initialize subplots
 fig, axs = plt.subplots(
     3, 3, sharey=True, figsize=(16, 9), gridspec_kw=dict(hspace=0.01, wspace=0.05)
 )
@@ -70,20 +83,21 @@ for row, task in zip(axs, tasks):
                 container, labels=labels, label_type="center", color="white", fontsize=6
             )
 
-
-# Labels
+# Set axis labels
 for ax, xlabel in zip(axs[-1, :], metrics.values()):
     ax.set_xlabel(xlabel)
 for ax, xlabel in zip(axs[0, :], metrics.values()):
-    h, l = ax.get_legend_handles_labels()
-    h.insert(
+    handles, legend_labels = ax.get_legend_handles_labels()
+    handles.insert(
         0,
         matplotlib.patches.Rectangle(
             (0, 0), 1, 1, fill=False, edgecolor="none", visible=False
         ),
     )
-    l.insert(0, "# Coils")
-    ax.legend(h, l, ncol=4, loc="lower center", bbox_to_anchor=(0.5, 1.0))
+    legend_labels.insert(0, "# Coils")
+    ax.legend(
+        handles, legend_labels, ncol=4, loc="lower center", bbox_to_anchor=(0.5, 1.0)
+    )
     ax.set_title(xlabel, pad=40)
 
 for rl, task in zip(axs[:, 0], tasks):
