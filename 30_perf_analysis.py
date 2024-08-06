@@ -27,7 +27,7 @@ args = parser.parse_args()
 
 # Directory where benchmark result files are stored
 BENCHMARK_DIR = "./outputs"
-results_files = glob.glob(BENCHMARK_DIR + "/**/**/*.csv", recursive=True)
+results_files = glob.glob(BENCHMARK_DIR + "/CPU/**/*.csv", recursive=True)
 
 # Read and concatenate all CSV files into a single DataFrame
 df = pd.concat(map(pd.read_csv, results_files))
@@ -37,10 +37,6 @@ df["coil_time"] = df["run_time"] / df["n_coils"]
 df["coil_mem"] = df["mem_peak"] / df["n_coils"]
 df = df.sort_values(["backend"], ascending=False)
 
-# Initialize subplots
-fig, axs = plt.subplots(
-    3, 3, sharey=True, figsize=(16, 9), gridspec_kw=dict(hspace=0.01, wspace=0.05)
-)
 tasks = ["forward", "adjoint", "grad"]
 metrics = {
     "coil_time": "time (s) /coil",
@@ -48,17 +44,38 @@ metrics = {
     "gpu0_mem_GiB_peak": "Peak GPU Mem (GB)",
 }
 
+# Remove GPU memory metric if all values are zero
+if df["gpu0_mem_GiB_peak"].sum() == 0:
+    metrics.pop("gpu0_mem_GiB_peak")
+    num_metrics = 2
+else:
+    num_metrics = 3
+
+# Initialize subplots
+fig, axs = plt.subplots(
+    3,
+    num_metrics,
+    sharey=True,
+    figsize=(16, 9),
+    gridspec_kw=dict(hspace=0.01, wspace=0.05),
+)
+
 # Custom palette with specified colors
 custom_palette = {1: "black", 12: "darkblue", 32: "purple"}
 
-
 # Define x-axis limits for each metric
-xlims = {k: v for k, v in zip(metrics.keys(), [(0, 5), (0, 80), (0, 20)])}
+xlims = {
+    k: v
+    for k, v in zip(
+        metrics.keys(),
+        [(0, 35), (0, 80)] if num_metrics == 2 else [(0, 5), (0, 80), (0, 20)],
+    )
+}
 
 # Generate bar plots for each task and metric
 for row, task in zip(axs, tasks):
     ddf = df[df["task"] == task]
-    for ax, (k) in zip(row, metrics.keys()):
+    for ax, (k) in zip(row[:num_metrics], metrics.keys()):
         sns.barplot(
             ddf,
             x=k,
