@@ -28,10 +28,10 @@ To fully reproduce the  benchmarks 4 steps are necessary:
 
 This is some result : 
 Benchmark backend performance on 2D images and trajs.
-![result2D](result2D.png)
+![result2D](results/result2D.png)
 
 Benchmark for GPU backend performance on 3D images and trajs.
-![result3D](result3D_gpu.png)
+![result3D](results/result3D_gpu.png)
 
 Benchmark for CPU backend performance on 3D images and trajs.
-![result3D](result3D_cpu.png)
+![result3D](results/result3D_cpu.png)
