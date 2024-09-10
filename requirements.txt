@@ -4,4 +4,8 @@ matplotlib
 numpy
 hydra-core
 hydra-callbacks
+modopt
+
 mri-nufft
+# git+https://github.com/mind-inria/mri-nufft.git@master
+

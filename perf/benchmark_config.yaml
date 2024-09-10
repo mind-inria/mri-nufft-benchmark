@@ -1,15 +1,15 @@
 defaults:
-  - override hydra/job_logging: colorlog
-  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: default
+  - override hydra/hydra_logging: default
 
 max_time: 10.0
 
 data:
   n_coils: 1
   smaps: false
-  dtype: "complex64"
+  dtype: complex64
 
-trajectory: "../trajs/floret.bin"
+trajectory: "./trajs/floret_176x256x256_0.5.bin"
 task:
   - forward
   - adjoint
@@ -17,7 +17,7 @@ task:
 
 
 backend:
-  name: "finufft"
+  name: finufft
   eps: 1e-3
   upsampfac: 2.0
 
@@ -28,3 +28,5 @@ monitor:
 hydra:
   job:
     chdir: true
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}/
