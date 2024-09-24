@@ -14,17 +14,19 @@ To fully reproduce the  benchmarks 4 steps are necessary:
    Elif a 3D traj , `python 00_trajectory3D.py` + shape of your data  
 2. Run the benchmarks. Currently are available:   
  - The Performance benchmark, checking the CPU/GPU usage and memory footprint for the different backend and configuration `perf` folder.  
-    If you have a configuration for 1 backend, 1 traj and 1 coil you can use `python 10_benchmark_perf.py` for you perf analysis.  
-    If you want to make several benchmark in a row, you can run `python auto_benchmark_perf.py`   
-    Backends, trajectories and coils can be managed directly at the start of this script.  
-    
-    In every case don't forget to install the necessary dependencies for each backend  
+    You can use `python 10_benchmark_perf.py` for you perf analysis.  
+    You can change some parameters like :  
+    `python auto_benchmark_perf.py data.n_coils=32 backend.name=cufinufft`  
+    You can also do multirun like :  
+    `python auto_benchmark_perf.py -m data.n_coils=1,12,32 backend.name=cufinufft,finufft trajectory=./trajs/radial_256x256_0.5.bin,./trajs/stack2D_of_spiral_256x256_0.5.bin `  
+
+    On JZ : 
+    `hydra-submitit-launch 10_benchmark_perf.py dev  max_time=5.0 data.n_coils=1,12,32 trajectory=./trajs/radial_256x256_0.5.bin,./trajs/stack2D_of_spiral_256x256_0.5.bin backend.name=tensorflow `  
+     
+    In every case don't forget to install the necessary dependencies for each backend.  
  - The Quality benchmark that check how the pair trajectory/backend performs for the reconstruction. All the configuration is modifiable in `qual` folder.  
     To launch the quality benchmark run `python 20_benchmark_quality.py`   
-3. Generate some analysis figures using `python 30_perf_analysis.py` + title of the figures  
-   At the start of the script, you need to indicate which folder the performance files are in.   
-   Caution: to get beautiful graphs, you'll probably have to change the plot parameters (bar colors, abscissa max, number of digits after the decimal point, text size on the plots, etc.).  
-
+3. Generate some analysis figures using `python 30_perf_analysis.py` + path to the folder with all .csv + trajectory dimension use (2 or 3) + title of the figures we gonna save.  
 
 This is some result : 
 Benchmark backend performance on 2D images and trajs.

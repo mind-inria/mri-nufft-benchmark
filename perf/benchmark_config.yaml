@@ -9,12 +9,11 @@ data:
   smaps: false
   dtype: complex64
 
-trajectory: "./trajs/floret_176x256x256_0.5.bin"
+trajectory: "./trajs/radial_256x256_0.5.bin"
 task:
   - forward
   - adjoint
   - grad
-
 
 backend:
   name: finufft
@@ -29,4 +28,7 @@ hydra:
   job:
     chdir: true
   run:
-    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}/
+    dir: outputs/new_/${now:%Y-%m-%d}/${backend.name}_${now:%H-%M-%S}/
+  sweep:
+    dir: outputs/new_/3D/${now:%Y-%m-%d}/${backend.name}_${now:%H-%M-%S}/
+
