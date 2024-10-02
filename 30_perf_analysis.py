@@ -73,17 +73,17 @@ custom_palette = {1: "black", 12: "darkblue", 32: "purple"}
 if num_metrics == 2:
     limits = [(0, 35), (0, 80)]
 elif args.traj_dimension == 2:
-    limits = [(0, 1), (0, 6), (0, 1)]
+    limits = [(0, 0.3), (0, 7), (0, 1)]
 else:
     limits = [(0, 5), (0, 80), (0, 20)]
 
 xlims = {k: v for k, v in zip(metrics.keys(), limits)}
 
-
 # Generate bar plots for each task and metric
 for row, task in zip(axs, tasks):
     ddf = df[df["task"] == task]
     for ax, (k) in zip(row[:num_metrics], metrics.keys()):
+        # print("k", k)
         sns.barplot(
             ddf,
             x=k,
@@ -102,11 +102,13 @@ for row, task in zip(axs, tasks):
         max_limit = xlims[k][1]
         for container in ax.containers:
             labels = [
-                f"{v:.1f}" if v >= max_limit else "" for v in container.datavalues
+                f"{v:.3f}" if v >= max_limit else "" for v in container.datavalues
             ]
             ax.bar_label(
                 container, labels=labels, label_type="center", color="white", fontsize=6
             )
+            # print(container.datavalues, container._label)
+
 
 # Set axis labels
 for ax, xlabel in zip(axs[-1, :], metrics.values()):
@@ -140,3 +142,6 @@ for col_ax, xlim in zip(axs.T, xlims.values()):
 output_file = BENCHMARK_DIR + f"/{args.output_filename}.png"
 plt.savefig(output_file)
 plt.show()
+
+# Save the DataFrame to a CSV file
+df.to_csv( BENCHMARK_DIR + f"/{args.output_filename}.csv", index=False)

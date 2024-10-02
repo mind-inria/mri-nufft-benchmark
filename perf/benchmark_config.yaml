@@ -28,7 +28,7 @@ hydra:
   job:
     chdir: true
   run:
-    dir: outputs/new_/${now:%Y-%m-%d}/${backend.name}_${now:%H-%M-%S}/
+    dir: outputs/running/${backend.name}_${now:%H-%M-%S}/
   sweep:
-    dir: outputs/new_/3D/${now:%Y-%m-%d}/${backend.name}_${now:%H-%M-%S}/
+    dir: outputs/running/${backend.name}_${now:%H-%M-%S}/
 
