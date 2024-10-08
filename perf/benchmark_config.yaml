@@ -2,19 +2,18 @@ defaults:
   - override hydra/job_logging: default
   - override hydra/hydra_logging: default
 
-max_time: 10.0
+max_time: 5.0
 
 data:
   n_coils: 1
   smaps: false
   dtype: complex64
 
-trajectory: "./trajs/floret_176x256x256_0.5.bin"
+trajectory: "./trajs/radial_256x256_0.5.bin"
 task:
   - forward
   - adjoint
   - grad
-
 
 backend:
   name: finufft
@@ -29,4 +28,7 @@ hydra:
   job:
     chdir: true
   run:
-    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}/
+    dir: outputs/running/${backend.name}_${now:%H-%M-%S}/
+  sweep:
+    dir: outputs/running/${backend.name}_${now:%H-%M-%S}/
+

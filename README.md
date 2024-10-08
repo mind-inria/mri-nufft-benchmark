@@ -4,7 +4,6 @@ This are a collection of script to perform benchmarking of MRI-NUFFT operations.
 
 They rely on the hydra configuration package and hydra-callback for measuring statistics. (see `requirements.txt`)
 
-
 To fully reproduce the  benchmarks 4 steps are necessary: 
 
 0. Get a Cartesian Reference image file, name `cpx_cartesian.npy`  
@@ -14,24 +13,55 @@ To fully reproduce the  benchmarks 4 steps are necessary:
    Elif a 3D traj , `python 00_trajectory3D.py` + shape of your data  
 2. Run the benchmarks. Currently are available:   
  - The Performance benchmark, checking the CPU/GPU usage and memory footprint for the different backend and configuration `perf` folder.  
-    If you have a configuration for 1 backend, 1 traj and 1 coil you can use `python 10_benchmark_perf.py` for you perf analysis.  
-    If you want to make several benchmark in a row, you can run `python auto_benchmark_perf.py`   
-    Backends, trajectories and coils can be managed directly at the start of this script.  
-    
-    In every case don't forget to install the necessary dependencies for each backend  
+    You can use `python 10_benchmark_perf.py` for you perf analysis.  
+    You can change some parameters like :  
+    `python 10_benchmark_perf.py data.n_coils=32 backend.name=cufinufft`  
+    You can also do multirun like :  
+    `python 10_benchmark_perf.py -m data.n_coils=1,12,32 backend.name=cufinufft,finufft trajectory=./trajs/radial_256x256_0.5.bin,./trajs/stack2D_of_spiral_256x256_0.5.bin `  
+
+    For running on Jean Zay, follow [this step](https://github.com/zaccharieramzi/jz-hydra-submitit-launcher) for the installation.
+    Then you can run : 
+    `hydra-submitit-launch 10_benchmark_perf.py dev max_time=5.0 data.n_coils=1,12,32 trajectory=./radial_256x256_0.5.bin,./stack2D_of_spiral_256x256_0.5.bin backend.name=tensorflow `  
+     
+    In every case don't forget to install the necessary dependencies for each backend.  
  - The Quality benchmark that check how the pair trajectory/backend performs for the reconstruction. All the configuration is modifiable in `qual` folder.  
     To launch the quality benchmark run `python 20_benchmark_quality.py`   
-3. Generate some analysis figures using `python 30_perf_analysis.py` + title of the figures  
-   At the start of the script, you need to indicate which folder the performance files are in.   
-   Caution: to get beautiful graphs, you'll probably have to change the plot parameters (bar colors, abscissa max, number of digits after the decimal point, text size on the plots, etc.).  
+3. Generate some analysis figures using `python 30_perf_analysis.py` + path to the folder with all .csv + trajectory dimension use (2 or 3) + title of the figures we gonna save.  
+
+## Some results :  
+All axes are the same size for each benchmark, allowing for better comparison between them.
+
+# Benchmark backend performance on 2D images and trajs.
+
+On cuda11 : 
+![result2D_old](results/2D/result2D_cuda11.png)
+
+On cuda12, with the new version on (cu)finufft 2.3 install with 'pip install' : 
+![result2D_new](results/2D/result2D_cuda12_release_with_pip.png)
+
+On cuda12, with the new version on (cu)finufft 2.3 install with 'pip install --no-binary' : 
+![result2D_new0.1](results/2D/result2D_cuda12_release_with_no_binary.png)
 
 
-This is some result : 
-Benchmark backend performance on 2D images and trajs.
-![result2D](results/result2D.png)
+# Benchmark for GPU backend performance on 3D images and trajs.
 
-Benchmark for GPU backend performance on 3D images and trajs.
-![result3D](results/result3D_gpu.png)
+On cuda11 :
+![result3D](results/3D/result3D_cuda11_gpu.png)
 
-Benchmark for CPU backend performance on 3D images and trajs.
-![result3D](results/result3D_cpu.png)
+On cuda12, with the new version on (cu)finufft 2.3 install with 'pip install' : 
+![result3D](results/3D/result3D_cuda12_gpu_pip.png)
+
+On cuda12, with the new version on (cu)finufft 2.3 install with 'pip install --no-binary' : 
+![result3D](results/3D/result3D_cuda12_gpu_no_binary.png)
+
+
+# Benchmark for CPU backend performance on 3D images and trajs.
+
+On cuda11 :
+![result3D](results/3D/result3D_cuda11_cpu.png)
+
+On cuda12, with the new version on (cu)finufft 2.3 install with pip : 
+![result3D](results/3D/result3D_cuda12_cpu_pip.png)
+
+On cuda12, with the new version on (cu)finufft 2.3 install with 'pip install --no-binary' : 
+![result3D](results/3D/result3D_cuda12_cpu_no_binary.png)
