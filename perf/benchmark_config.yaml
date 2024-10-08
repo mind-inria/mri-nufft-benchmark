@@ -2,7 +2,7 @@ defaults:
   - override hydra/job_logging: default
   - override hydra/hydra_logging: default
 
-max_time: 10.0
+max_time: 5.0
 
 data:
   n_coils: 1

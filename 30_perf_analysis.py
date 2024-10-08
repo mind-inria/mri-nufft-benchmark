@@ -4,7 +4,7 @@ This script generates benchmark plots from CSV files containing performance metr
 The generated plots are saved as a PNG file with the specified filename.
 
 Usage:
-    python 30_perf_analysis.py <path_to_csv> <wich_traj> <output_filename>
+    python 30_perf_analysis.py <path_to_csv> <traj> <output_filename>
 """
 
 import argparse
@@ -69,13 +69,14 @@ fig, axs = plt.subplots(
 # Custom palette with specified colors
 custom_palette = {1: "black", 12: "darkblue", 32: "purple"}
 
-# Define x-axis limits for each metric
-if num_metrics == 2:
-    limits = [(0, 35), (0, 80)]
-elif args.traj_dimension == 2:
+# Define x-axis limits for each metric, based on the precedent range of values
+# first time, then memory, then GPU memory in respective seconds, GB and GB
+if num_metrics == 2: # if CPU only
+    limits = [(0, 35), (0, 80)] 
+elif args.traj_dimension == 2: # if 2D trajectory
     limits = [(0, 0.3), (0, 7), (0, 1)]
 else:
-    limits = [(0, 5), (0, 80), (0, 20)]
+    limits = [(0, 1), (0, 50), (0, 20)]
 
 xlims = {k: v for k, v in zip(metrics.keys(), limits)}
 
@@ -83,7 +84,6 @@ xlims = {k: v for k, v in zip(metrics.keys(), limits)}
 for row, task in zip(axs, tasks):
     ddf = df[df["task"] == task]
     for ax, (k) in zip(row[:num_metrics], metrics.keys()):
-        # print("k", k)
         sns.barplot(
             ddf,
             x=k,
@@ -107,7 +107,6 @@ for row, task in zip(axs, tasks):
             ax.bar_label(
                 container, labels=labels, label_type="center", color="white", fontsize=6
             )
-            # print(container.datavalues, container._label)
 
 
 # Set axis labels
