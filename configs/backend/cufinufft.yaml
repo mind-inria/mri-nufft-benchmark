@@ -1,0 +1,6 @@
+name: cufinufft
+device: cuda
+framework: cupy
+parameters:
+  eps: 1.0e-6
+  gpu_device_id: 0

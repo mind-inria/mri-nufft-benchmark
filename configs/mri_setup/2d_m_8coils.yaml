@@ -1,0 +1,5 @@
+ndim: 2
+image_size: [256, 256]
+ncoils: 8
+smaps: true
+smaps_asset: assets/smaps/smaps_2d_256_v1.npy

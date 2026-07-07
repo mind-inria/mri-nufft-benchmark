@@ -1,0 +1,10 @@
+# Available diagnostic asset, not part of the default scenario list (see
+# README: "Radial trajectories remain defined as an available asset...").
+trajectory_id: radial_2d_512_standard
+trajectory_type: radial
+ndim: 2
+n_samples: 262144
+n_shots: 512
+density: standard
+asset_file: assets/trajectories/radial_2d_512_standard.npy
+asset_version: v1.0.0

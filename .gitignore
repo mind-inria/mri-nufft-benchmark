@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Benchmark runtime output
+benchmark_results/
+outputs/
+multirun/
+
+# Generated assets (regenerate via scripts/generate_assets.py)
+assets/trajectories/*.npy
+assets/smaps/*.npy

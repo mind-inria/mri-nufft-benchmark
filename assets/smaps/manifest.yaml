@@ -1,0 +1,8 @@
+- smaps_id: smaps_2d_256_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 8
+  image_size:
+  - 256
+  - 256
+  checksum_sha256: a7cf42cd123a795a1bfa1ba83379b28415cd7dd499a5b977567b50028e326fa4

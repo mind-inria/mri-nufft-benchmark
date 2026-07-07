@@ -1,0 +1,6 @@
+name: torchkbnufft
+device: cpu
+framework: torch
+parameters:
+  eps: 1.0e-6
+  osf: 2

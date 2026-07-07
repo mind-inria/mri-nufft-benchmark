@@ -1,0 +1,39 @@
+[project]
+name = "mri-nufft-benchmark"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "hydra-core>=1.3.4",
+    "mri-nufft[cufinufft,finufft,torchkbnufft,gpunufft]",
+    "cufinufft",
+    "finufft",
+    "plotly>=6.8.0",
+    "polars>=1.42.1",
+    "psutil>=7.2.2",
+    "pyarrow>=24.0.0",
+    "pynvml>=13.0.1",
+    "torch>=2.12.1",
+    "torchkbnufft>=1.5.2",
+]
+
+# https://docs.astral.sh/uv/guides/integration/pytorch/
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'" }]
+torchvision = [{ index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'" }]
+mri-nufft = { path = "../mri-nufft", editable = true }
+cufinufft = { path = "../finufft/python/cufinufft"}
+finufft = {path = "../finufft/python/finufft"}
+
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.15.20",
+]

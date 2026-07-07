@@ -1,0 +1,4 @@
+name: finufft
+device: cpu
+framework: numpy
+parameters: {}

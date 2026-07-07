@@ -1,0 +1,4 @@
+ndim: 3
+image_size: [64, 64, 44]
+ncoils: 1
+smaps: false

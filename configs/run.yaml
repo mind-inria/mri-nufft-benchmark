@@ -1,0 +1,17 @@
+defaults:
+  - base_config
+  - backend: finufft
+  - trajectory: spiral_2d_256_standard
+  - mri_setup: 2d_m_8coils
+  - action: forward
+  - benchmark: default
+  - _self_
+
+suite: benchmark
+
+reference: # used by the accuracy metrics only
+  backend: finufft
+  parameters:
+    eps: 1.0e-12
+    upsampfac: 2.0
+    nthreads: 1

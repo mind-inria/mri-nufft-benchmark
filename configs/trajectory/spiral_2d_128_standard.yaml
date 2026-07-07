@@ -1,0 +1,8 @@
+trajectory_id: spiral_2d_128_standard
+trajectory_type: spiral
+ndim: 2
+n_samples: 32768
+n_shots: 128
+density: standard
+asset_file: assets/trajectories/spiral_2d_128_standard.npy
+asset_version: v1.0.0
