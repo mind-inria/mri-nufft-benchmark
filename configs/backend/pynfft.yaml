@@ -1,0 +1,4 @@
+name: pynfft
+device: cpu
+framework: numpy
+parameters: {}

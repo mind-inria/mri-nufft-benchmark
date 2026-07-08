@@ -14,6 +14,7 @@ GROUP_COLS = [
     "backend",
     "backend_version",
     "action",
+    "input_location",
     "ndim",
     "nx",
     "ny",
@@ -24,7 +25,10 @@ GROUP_COLS = [
     "n_samples",
 ]
 
-_SCENARIO_COLS = [c for c in GROUP_COLS if c != "action"]
+# input_location is excluded alongside action: operator_init rows are always
+# input_location=host, but must still join persistent_gpu_mb onto
+# forward/adjoint rows regardless of their input_location.
+_SCENARIO_COLS = [c for c in GROUP_COLS if c not in ("action", "input_location")]
 
 _NULL_ACCURACY_COLS = (
     "relative_l2_error",

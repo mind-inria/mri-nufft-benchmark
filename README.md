@@ -52,24 +52,53 @@ combination is run against each. Rows are chosen so that each scaling
 dimension has at least two comparable points sharing everything except the
 variable being scaled:
 
-| mri_setup     | trajectory               | varies vs. row above                                 |
-| ------------- | ------------------------ | ---------------------------------------------------- |
-| 2D-S, 1 coil  | `spiral_2d_128_standard` | — (baseline)                                         |
-| 2D-M, 1 coil  | `spiral_2d_256_standard` | image size (same ncoils, same trajectory family)     |
-| 2D-M, 8 coils | `spiral_2d_256_standard` | ncoils (same size, same trajectory)                  |
-| 3D-S, 1 coil  | `sos_3d_64_standard`     | 3D coverage — no 3D scaling curve yet (single point) |
-| 3D-M, 1 coil  | `sos_3d_192_standard`    | 3D coverage — no 3D scaling curve yet (single point) |
+| mri_setup      | trajectory               | varies vs. row above                             |
+| -------------- | ------------------------ | -------------------------------------------------- |
+| 2D-S, 1 coil   | `spiral_2d_128_standard` | — (baseline)                                       |
+| 2D-S, 8 coils  | `spiral_2d_128_standard` | ncoils (same size, same trajectory)                |
+| 2D-S, 32 coils | `spiral_2d_128_standard` | ncoils (same size, same trajectory)                |
+| 2D-M, 1 coil   | `spiral_2d_256_standard` | image size (same ncoils, same trajectory family)   |
+| 2D-M, 8 coils  | `spiral_2d_256_standard` | ncoils (same size, same trajectory)                |
+| 2D-M, 32 coils | `spiral_2d_256_standard` | ncoils (same size, same trajectory)                |
+| 2D-L, 1 coil   | `spiral_2d_512_standard` | image size (same ncoils, same trajectory family)   |
+| 2D-L, 8 coils  | `spiral_2d_512_standard` | ncoils (same size, same trajectory)                |
+| 2D-L, 32 coils | `spiral_2d_512_standard` | ncoils (same size, same trajectory)                |
+| 3D-S, 1 coil   | `sos_3d_64_standard`     | 3D coverage (image-size scaling vs. 3D-M below)    |
+| 3D-S, 8 coils  | `sos_3d_64_standard`     | ncoils (same size, same trajectory)                |
+| 3D-S, 32 coils | `sos_3d_64_standard`     | ncoils (same size, same trajectory)                |
+| 3D-M, 1 coil   | `sos_3d_192_standard`    | 3D coverage (image-size scaling vs. 3D-S above)    |
+| 3D-M, 8 coils  | `sos_3d_192_standard`    | ncoils (same size, same trajectory)                |
+| 3D-M, 32 coils | `sos_3d_192_standard`    | ncoils (same size, same trajectory)                |
+| 3D-L, 1 coil   | `sos_3d_256_standard`    | image size (same ncoils, same trajectory family)   |
+| 3D-L, 8 coils  | `sos_3d_256_standard`    | ncoils (same size, same trajectory)                |
+| 3D-L, 32 coils | `sos_3d_256_standard`    | ncoils (same size, same trajectory)                |
 
 Radial trajectories remain defined as an available asset (used for
 diagnostics or extending the matrix later) but are not part of the default
 list, to avoid points that can't be compared across any single scaling axis.
 
-That's 5 scenarios × 3 backends × 4 actions × 2 suites = 120 runs. At the
-default 30s budget for the benchmark suite and a handful of seconds for the
-memory suite (see below), the full matrix completes in under an hour on
-a single GPU. Extend this list deliberately (new row = new evidence you
-need, and matching an existing trajectory family if it should feed a
-scaling curve), not by re-introducing a full cross-product.
+The 32-coil rows, plus all three 3D-L rows, run a reduced 4-backend "fast"
+tier (`finufft`, `cufinufft`, `gpunufft`, `ducc0`) instead of the full 7 (see
+`scripts/run_all.sh`'s `FAST_BACKENDS`/`SLOW_BACKENDS`): `torchkbnufft-cpu`
+builds one FFT plan per coil with no batching, so its `operator_init` cost
+scales ~linearly with ncoils and dominates wall time at 32 coils;
+`torchkbnufft-gpu` and `pynfft` are dropped from those rows too to keep the
+matrix tractable given how expensive the 256³-scale 3D-L trajectory already
+is at every coil count. `pynfft` also fails fast on every `ncoils>1`
+scenario regardless of tier (see Known Limitations).
+
+That's 10 scenarios (the "all"-tier 1-coil/8-coil rows) × 7 backends × 4
+actions × 2 suites = 560 runs, plus 8 scenarios (32-coil rows and all
+3D-L rows) × 4 backends × 4 actions × 2 suites = 256 runs, plus 18
+scenarios × 3 cuda backends (`cufinufft`, `gpunufft`, `torchkbnufft-gpu`) ×
+2 actions (`forward`/`adjoint` with `input_location=device`) × 2 suites =
+216 more runs (the GPU-resident sweep always uses these 3 cuda backends,
+independent of the CPU backend tier). At the default 30s budget for the
+benchmark suite and a handful of seconds for the memory suite (see below),
+the full matrix completes in a day or two on a single GPU (the 256³-scale
+3D trajectory dominates). Extend this list deliberately (new row = new
+evidence you need, and matching an existing trajectory family if it should
+feed a scaling curve), not by re-introducing a full cross-product.
 
 ### Image dimensions
 
@@ -77,8 +106,10 @@ scaling curve), not by re-introducing a full cross-product.
 | ----- | --------------- |
 | 2D-S  | 128 × 128       |
 | 2D-M  | 256 × 256       |
+| 2D-L  | 512 × 512       |
 | 3D-S  | 64 × 64 × 44    |
 | 3D-M  | 192 × 192 × 128 |
+| 3D-L  | 256 × 256 × 176 |
 
 ### Coil configurations
 
@@ -86,6 +117,7 @@ scaling curve), not by re-introducing a full cross-product.
 | ------ | ----- |
 | 1      | false |
 | 8      | true  |
+| 32     | true  |
 
 `smaps` is a boolean field indicating whether complex-valued sensitivity maps
 are applied per coil. When `smaps=true`, a synthetic set of coil sensitivity
@@ -139,6 +171,20 @@ coordinates.
 Composite actions (`cg_iteration`, `reconstruction`) and Toeplitz-specific
 actions are deferred — see Known Limitations.
 
+### Input location
+
+For `forward`/`adjoint` on a cuda-capable backend (`cufinufft`, `gpunufft`,
+`torchkbnufft-gpu`), the `input_location` config controls
+where the test vector under test lives before the timed call:
+
+| `input_location` | description                                                                    |
+| ----------------- | ------------------------------------------------------------------------------- |
+| `host` (default)  | Plain numpy array — any host→device transfer happens inside the timed call, same as a cold call site. |
+| `device`          | Pre-staged as a GPU-resident array (cupy, or a CUDA torch tensor) during setup, isolating backend compute from transfer cost — the scenario relevant mid-reconstruction-loop, where data is already on the GPU. |
+
+`input_location=device` is only valid for `forward`/`adjoint` on a
+`device=cuda` backend; any other combination fails config validation.
+
 ---
 
 ## Benchmark Suites
@@ -152,11 +198,11 @@ runner) plus accuracy metrics from the already-captured output. `validate`
 checks the accuracy gate once, from the same captured output — it does not
 re-run anything.
 
-The reference output (NDFT or high-precision FINUFFT) depends only on the
-scenario (trajectory, mri_setup, action) — not on the backend under test. It
-is computed once per scenario and cached (in-process, keyed by scenario) so
+The reference output (high-precision FINUFFT) depends only on the scenario
+(trajectory, mri_setup, action) — not on the backend under test. It is
+computed once per scenario and cached (in-process, keyed by scenario) so
 that comparing N backends on the same scenario does not recompute an
-expensive NDFT reference N times.
+expensive reference N times.
 
 **`operator_init` is a special case.** For every other action, `setup()`
 builds the operator once and `run()` reuses it. For `operator_init`, the
@@ -164,12 +210,9 @@ thing being timed is the construction itself, so `setup()` must not
 pre-build the operator under test — it only loads config, trajectory, and
 test vectors, and `run()` performs `build_operator(config)`.
 
-#### Reference backend selection
+#### Reference backend
 
-| Image size       | Reference                 |
-| ---------------- | ------------------------- |
-| N ≤ 128² or 128³ | Exact NDFT                |
-| N > 128² or 128³ | FINUFFT with smallest eps |
+FINUFFT with the smallest eps, for every image size.
 
 #### Metrics
 
@@ -443,6 +486,12 @@ smaps_asset: assets/smaps/smaps_2d_256_v1.npy # required when smaps=true
 name: forward
 ```
 
+**`configs/input_location/device.yaml`** — see Input location:
+
+```yaml
+name: device
+```
+
 **`configs/benchmark/default.yaml`** — used by the benchmark suite (runtime + accuracy):
 
 ```yaml
@@ -472,6 +521,7 @@ defaults:
   - mri_setup: 2d_m_8coils
   - action: forward
   - benchmark: default
+  - input_location: host
   - _self_
 
 reference: # used by the accuracy metrics only
@@ -479,7 +529,6 @@ reference: # used by the accuracy metrics only
   parameters:
     eps: 1.0e-12
     upsampfac: 2.0
-    nthreads: 1
 ```
 
 A single `mri_setup`/`trajectory` pair is one row of the scenario list
@@ -493,7 +542,7 @@ python run.py backend=finufft trajectory=spiral_2d_256_standard \
               mri_setup=2d_m_8coils action=forward
 
 # One scenario row, all backends x all actions, local parallel execution
-python run.py -m backend=finufft,cufinufft,torchkbnufft \
+python run.py -m backend=finufft,cufinufft,torchkbnufft-cpu,torchkbnufft-gpu \
               trajectory=spiral_2d_256_standard \
               mri_setup=2d_m_8coils \
               action=operator_init,forward,adjoint,normal_operator
@@ -853,44 +902,85 @@ A point is Pareto-optimal if no other point is both faster and more accurate.
 ### Scaling dataset
 
 Derived from the summary table, filtered to action `forward` and the
-`spiral_2d_*_standard` trajectory family (the only family with more than one
-scenario row, per the scenario list above). Contains one row per
-(backend, variable, value) triplet:
+`spiral_2d_*_standard`/`sos_3d_*_standard` trajectory families (the two
+families with more than one scenario row, per the scenario list above).
+Contains one row per (backend, trajectory_id, variable, value) triplet —
+`trajectory_id` disambiguates points that would otherwise share the same
+(backend, variable, value) key across families (e.g. `ncoils=1` exists for
+both the 2D and 3D multi-coil trajectories):
 
-- `variable=nx`: 2D-S vs 2D-M, both at 1 coil — image-size scaling.
-- `variable=ncoils`: 2D-M at 1 coil vs 8 coils — coil scaling.
-
-3D scaling is not produced until a second 3D scenario is added to the
-scenario list (see Known Limitations).
+- `variable=nx`: 2D-S vs 2D-M vs 2D-L (all 1 coil), and 3D-S vs 3D-M vs 3D-L
+  (all 1 coil) — image-size scaling.
+- `variable=ncoils`: 2D-S, 2D-M, 2D-L, 3D-S, 3D-M, and 3D-L each at 1/8/32
+  coils — coil scaling.
 
 ---
 
 ## Expected Figures
 
-All figures live as tabs in the single `report.html`.
+`report.html` has seven tabs, grouped into three sections in the tab bar
+(a visual grouping only — each tab is still an independent panel):
 
-### Runtime vs accuracy (primary figure)
+**Per-Scenario Breakdown** (Runtime, GPU Memory, CPU Memory):
 
-Scatter plot on log-log axes. Each point is one (backend, configuration) pair.
-The Pareto frontier is highlighted. Color encodes backend; shape encodes image
-size.
+- *Runtime* is a grid faceted by action (rows: `forward`/`adjoint`/
+  `normal_operator`/`operator_init`, in that order) and by base trajectory
+  family (columns: 2D-S, 2D-M, 2D-L, 3D-S, 3D-M, 3D-L). Within each panel,
+  bars run one per backend (y-axis), grouped and colored by ncoils (1/8/32
+  coils, where that trajectory has multi-coil variants) — the metric is
+  **runtime per coil** (`runtime_median_ms / ncoils`), not raw runtime, so
+  the 1/8/32-coil variants of the same trajectory land in the same panel as
+  directly comparable bars instead of needing a separate column each.
+  Restricted to `input_location=host`.
+- *GPU Memory* and *CPU Memory* are a grid of horizontal grouped bar plots,
+  restricted to `input_location=host` so each (backend, action) pair appears
+  once. Rows: action, same order as above. Within each panel, bars run one
+  per backend (y-axis), colored by scenario (2D-S, 2D-S/8-coil, 2D-S/32-coil,
+  2D-M, 2D-M/8-coil, 2D-M/32-coil, 2D-L, 2D-L/8-coil, 2D-L/32-coil, 3D-S,
+  3D-S/8-coil, 3D-S/32-coil, 3D-M, 3D-M/8-coil, 3D-M/32-coil, 3D-L,
+  3D-L/8-coil, 3D-L/32-coil) — raw (not per-coil) peak memory, read from the
+  memory suite.
 
-### Runtime scaling
+Runtime bars carry an asymmetric error bar spanning the [p5, p95] replicate
+range around the median (divided by ncoils along with the bar itself, for the
+per-coil Runtime panel) — memory bars don't, since peak memory is a single
+max over replicates (see summary.py), not a distribution.
 
-One subplot per action. X-axis: image size (log scale). Y-axis: runtime (log
-scale). One curve per backend. A second set of subplots replaces image size
-with number of coils.
+A lone backend that's much larger than the runner-up in its panel (e.g. a
+pure-Python reference implementation, or a 3D scenario dwarfing every 2D
+one) has its bar capped at ~1.2x the runner-up's value and labelled with its
+true number (and its error bar dropped, since it'd otherwise anchor at the
+wrong position), instead of compressing every other bar to invisibility on a
+linear axis.
 
-### Memory scaling
+**GPU-Resident Input** (GPU Resident Runtime, GPU Resident Memory) compares
+`input_location=host` against `input_location=device` for `forward`/`adjoint`
+on the cuda-capable backends only (the ones that actually ran with
+`input_location=device`). Grid: one row per action, one column per scenario
+(raw, not per-coil); bars run one per backend, grouped and colored by
+`input_location` (host vs. device); runtime bars carry the same [p5, p95]
+error bar as above.
 
-Same structure as runtime scaling. Y-axis: peak GPU memory in MB. Separate
-panels for persistent vs peak memory.
+**Scaling** (Scaling Runtime, Scaling Memory) plots the scaling dataset (see
+above) as line charts: one row per `variable` (`nx`, `ncoils`), one column
+per trajectory family (2D spiral, 3D stack-of-spirals), one line per backend
+(raw, not per-coil), x-axis log-scaled with ticks at the actual scenario
+values (e.g. `ncoils=1/8/32`). Runtime's y-axis is also log-scaled, since
+backends span orders of magnitude; memory's isn't, since a 0 MB
+persistent-allocation point (a real, valid measurement for some GPU backends)
+can't be placed on a log axis.
 
-### Action breakdown
+Every bar chart uses a narrow `bargap`/`bargroupgap` so bars read as thick,
+filled shapes rather than thin lines. Runtime axes are labelled with their
+unit (`ms`, or `ms / coil` for the per-coil Runtime panel).
 
-Grouped bar plot for a fixed canonical scenario (2D-M, 8 coils,
-`spiral_2d_256_standard`). One group per backend; bars show the time
-breakdown across `operator_init`, `forward`, `adjoint`, `normal_operator`.
+Figures are sized generously (up to ~1600px wide, ~480px per action row)
+with larger fonts throughout, since these are read zoomed-in on a wide
+screen, not thumbnailed.
+
+In every bar panel, backends are ordered CPU first (alphabetical), then
+GPU/cuda (alphabetical) — see `analysis.scenarios.BACKEND_DEVICES` — with a
+shaded background band over the GPU rows marking the group boundary.
 
 ---
 
@@ -919,3 +1009,25 @@ deliberately, once the core pipeline above is running and validated:
 - **Non-uniform density compensation** in accuracy comparisons.
 - **Half-precision (FP16)**.
 - **Batched reconstruction** (multiple volumes in a single call).
+- **`pynfft` on multi-coil (`ncoils>1`) scenarios**: mri-nufft's pyNFFT3
+  binding raises on the `forward` action for `ncoils>1` (its per-coil array
+  slice isn't the C-contiguous complex128 array pyNFFT3's plan requires) -
+  an upstream mri-nufft/pyNFFT3 integration issue, not fixable from this
+  repo's backend registry. `pynfft` is otherwise run on every scenario;
+  this one (backend, action) cell is simply absent from the results.
+- **`torchkbnufft-cpu` on the 32-coil scenarios**: deliberately skipped by
+  `scripts/run_all.sh` (see `SLOW_BACKENDS`), not a failure - its
+  per-coil, unbatched FFT plan construction makes `operator_init` at 32
+  coils expensive enough to dominate the whole matrix's wall time. Run it
+  manually via `run.py` (see how-to.md) if you need that data point.
+- **`finufft`'s requested `eps=1e-6` is a single-precision floor, not always
+  achievable**: FINUFFT's `eps` is a *relative* ℓ2-norm accuracy target, but
+  single precision (`complex64`) can't get below roughly `N_max * eps_mach`
+  (`eps_mach ≈ 6e-8`) for the largest grid dimension `N_max` - a hard
+  numerical limit, not a bug. `configs/backend/finufft.yaml` sets
+  `allow_eps_too_small: 1` so FINUFFT clamps to the best achievable accuracy
+  and proceeds instead of hard-erroring (FINUFFT's own escape hatch for
+  this); it logs a `check_sigma warning` to stderr in that case. This means
+  finufft's `relative_l2_error` may sit above `1e-6` on the larger scenarios
+  (2D-L, 3D-L, and to a lesser extent 2D-M/3D-M) - check the accuracy
+  columns rather than assuming the requested `eps` was met.

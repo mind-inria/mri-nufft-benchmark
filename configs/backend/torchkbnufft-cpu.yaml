@@ -1,4 +1,4 @@
-name: torchkbnufft
+name: torchkbnufft-cpu
 device: cpu
 framework: torch
 parameters:

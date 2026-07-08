@@ -1,0 +1,5 @@
+ndim: 3
+image_size: [64, 64, 44]
+ncoils: 8
+smaps: true
+smaps_asset: assets/smaps/smaps_3d_64_8coils_v1.npy

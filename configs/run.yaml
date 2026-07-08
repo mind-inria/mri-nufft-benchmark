@@ -5,6 +5,7 @@ defaults:
   - mri_setup: 2d_m_8coils
   - action: forward
   - benchmark: default
+  - input_location: host
   - _self_
 
 suite: benchmark
@@ -14,4 +15,3 @@ reference: # used by the accuracy metrics only
   parameters:
     eps: 1.0e-12
     upsampfac: 2.0
-    nthreads: 1

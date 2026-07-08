@@ -1,6 +1,5 @@
-# n_samples kept low relative to true Nyquist density for this image size so
-# the exact-NDFT accuracy reference (per README's reference-selection table)
-# stays computationally tractable - see scripts/generate_assets.py.
+# n_samples kept low relative to true Nyquist density for this image size -
+# see scripts/generate_assets.py.
 trajectory_id: sos_3d_64_standard
 trajectory_type: sos
 ndim: 3

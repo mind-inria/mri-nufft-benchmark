@@ -6,3 +6,97 @@
   - 256
   - 256
   checksum_sha256: a7cf42cd123a795a1bfa1ba83379b28415cd7dd499a5b977567b50028e326fa4
+- smaps_id: smaps_2d_256_32coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 32
+  image_size:
+  - 256
+  - 256
+  checksum_sha256: 42e40fcfc320ef9a10b1173ea5db3c468e234908986b1ba8b579f5587b3a39da
+- smaps_id: smaps_2d_128_8coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 8
+  image_size:
+  - 128
+  - 128
+  checksum_sha256: cbdba860d7b099733c6def98e8d7ed6271a4f1adea6a8b84c06338012fd17b01
+- smaps_id: smaps_2d_128_32coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 32
+  image_size:
+  - 128
+  - 128
+  checksum_sha256: e5da311cbe6c29bee06d31c8dcbdb89ecc19af3065ad5f4e7cfce2591fbf5565
+- smaps_id: smaps_3d_192_32coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 32
+  image_size:
+  - 192
+  - 192
+  - 128
+  checksum_sha256: a409e40e40020704d0e47aef0a7e9142c13bbcf23f7f46e137c291ad0876d760
+- smaps_id: smaps_3d_192_8coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 8
+  image_size:
+  - 192
+  - 192
+  - 128
+  checksum_sha256: 24fd50d821d52f3b8efe708159370a071bd043942c981b97488df79eba756115
+- smaps_id: smaps_3d_64_8coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 8
+  image_size:
+  - 64
+  - 64
+  - 44
+  checksum_sha256: 07c34608b092363ceea5107d3890f2821c22a39001ac27b55cbe4e23c6eaa9bf
+- smaps_id: smaps_3d_64_32coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 32
+  image_size:
+  - 64
+  - 64
+  - 44
+  checksum_sha256: ca055a0a48b92bea815b2dc8b66d3aa71aee2bbb19a9ce1be59d847f04f544c0
+- smaps_id: smaps_2d_512_8coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 8
+  image_size:
+  - 512
+  - 512
+  checksum_sha256: 862f0029b3d86226ac91ac70e27d66afd9d70cccacdb7f277c0cd1a3dd4ec091
+- smaps_id: smaps_2d_512_32coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 32
+  image_size:
+  - 512
+  - 512
+  checksum_sha256: 9d2d2de8ca9f48a30da78ed27d85722d2974e7e7868768e90ebfe6d66dce0748
+- smaps_id: smaps_3d_256_8coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 8
+  image_size:
+  - 256
+  - 256
+  - 176
+  checksum_sha256: 67dc7860b6ed7f28fffecebbeeb7c7b6ddf4bd357df73e638d69a185758a7646
+- smaps_id: smaps_3d_256_32coils_v1
+  asset_version: v1.0.0
+  generation_method: birdcage
+  ncoils: 32
+  image_size:
+  - 256
+  - 256
+  - 176
+  checksum_sha256: d04afca430f68ae413ad568086a9290adbfadef8f2ebbd6048c9cba2019ab2dc

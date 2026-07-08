@@ -1,0 +1,8 @@
+trajectory_id: sos_3d_256_standard
+trajectory_type: sos
+ndim: 3
+n_samples: 5767168
+n_shots: 22528
+density: standard
+asset_file: assets/trajectories/sos_3d_256_standard.npy
+asset_version: v1.0.0

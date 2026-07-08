@@ -55,6 +55,21 @@ class ActionConfig:
 
 
 @dataclass
+class InputLocationConfig:
+    """Where the forward/adjoint test vector lives before the timed call.
+
+    ``host``: a plain numpy array (default) - any host->device transfer a GPU
+    backend needs happens inside the timed call, same as a cold call site.
+    ``device``: pre-converted to the backend's native GPU array (cupy, or a
+    CUDA torch tensor for torchkbnufft) during setup, so the timed call
+    measures a backend fed already-GPU-resident data (e.g. mid-reconstruction
+    loop), not the transfer.
+    """
+
+    name: str = MISSING
+
+
+@dataclass
 class MeasurementConfig:
     warmup_min_iters: int = MISSING
     warmup_min_seconds: float = MISSING
@@ -81,6 +96,9 @@ class BenchmarkConfig:
     action: ActionConfig = MISSING
     benchmark: MeasurementConfig = MISSING
     reference: ReferenceConfig = MISSING
+    input_location: InputLocationConfig = field(
+        default_factory=lambda: InputLocationConfig(name="host")
+    )
     suite: str = "benchmark"  # "benchmark" or "memory"
 
     def __post_init__(self) -> None:
@@ -91,6 +109,22 @@ class BenchmarkConfig:
             )
         if self.suite not in ("benchmark", "memory"):
             raise ValueError(f"suite must be 'benchmark' or 'memory', got {self.suite!r}")
+        if self.input_location.name not in ("host", "device"):
+            raise ValueError(
+                f"input_location.name must be 'host' or 'device', got "
+                f"{self.input_location.name!r}"
+            )
+        if self.input_location.name == "device":
+            if self.action.name not in ("forward", "adjoint"):
+                raise ValueError(
+                    "input_location=device only applies to forward/adjoint "
+                    f"actions, got action={self.action.name!r}"
+                )
+            if self.backend.device != "cuda":
+                raise ValueError(
+                    "input_location=device requires a cuda backend, got "
+                    f"backend.device={self.backend.device!r}"
+                )
 
 
 def register_configs() -> None:

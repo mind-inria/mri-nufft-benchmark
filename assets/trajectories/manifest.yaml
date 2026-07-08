@@ -18,6 +18,16 @@
     in_out: true
     nb_revolutions: 10
   checksum_sha256: fe1955cbcd0e343b7724357a833ea83b6d47e3ffbc749ac3208393a879483eba
+- trajectory_id: spiral_2d_512_standard
+  asset_version: v1.0.0
+  generation_library: mrinufft.trajectories
+  generation_seed: 42
+  generation_params:
+    Nc: 512
+    Ns: 512
+    in_out: true
+    nb_revolutions: 12
+  checksum_sha256: 9fa399e318a8338d9374cfe496cd5181e5e652f21c44984cb0117236ec55ecda
 - trajectory_id: sos_3d_64_standard
   asset_version: v1.0.0
   generation_library: mrinufft.trajectories
@@ -40,6 +50,17 @@
     nb_revolutions: 10
     nb_stacks: 128
   checksum_sha256: 3c77385900fb6b0f24de38e8603fc2ab6bc51915b1d69912212eae3c3b2006e6
+- trajectory_id: sos_3d_256_standard
+  asset_version: v1.0.0
+  generation_library: mrinufft.trajectories
+  generation_seed: 42
+  generation_params:
+    Nc: 128
+    Ns: 256
+    in_out: true
+    nb_revolutions: 12
+    nb_stacks: 176
+  checksum_sha256: 95d571e8fb56b6cec13e0986b221ef3eff5c0e1b22a9a0749b9ccb2c1009254f
 - trajectory_id: radial_2d_512_standard
   asset_version: v1.0.0
   generation_library: mrinufft.trajectories

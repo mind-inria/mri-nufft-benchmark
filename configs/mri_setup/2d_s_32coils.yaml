@@ -1,0 +1,5 @@
+ndim: 2
+image_size: [128, 128]
+ncoils: 32
+smaps: true
+smaps_asset: assets/smaps/smaps_2d_128_32coils_v1.npy

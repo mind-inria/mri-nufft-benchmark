@@ -1,0 +1,5 @@
+name: ducc0
+device: cpu
+framework: numpy
+parameters:
+  eps: 1.0e-6

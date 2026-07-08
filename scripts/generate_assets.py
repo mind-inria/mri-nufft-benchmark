@@ -20,14 +20,18 @@ TRAJ_DIR = REPO_ROOT / "assets" / "trajectories"
 SMAPS_DIR = REPO_ROOT / "assets" / "smaps"
 
 ASSET_VERSION = "v1.0.0"
-GENERATION_SEED = 42  # birdcage coil placement is deterministic; recorded for schema parity
+GENERATION_SEED = (
+    42  # birdcage coil placement is deterministic; recorded for schema parity
+)
 
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _write_trajectory(trajectory_id: str, array: np.ndarray, params: dict[str, Any]) -> dict:
+def _write_trajectory(
+    trajectory_id: str, array: np.ndarray, params: dict[str, Any]
+) -> dict:
     path = TRAJ_DIR / f"{trajectory_id}.npy"
     np.save(path, array.astype(np.float32))
     print(f"wrote {path} shape={array.shape}")
@@ -47,25 +51,30 @@ def generate_trajectories() -> list[dict]:
 
     params = {"Nc": 128, "Ns": 256, "in_out": True, "nb_revolutions": 8}
     manifest.append(
-        _write_trajectory("spiral_2d_128_standard", mt.initialize_2D_spiral(**params), params)
+        _write_trajectory(
+            "spiral_2d_128_standard", mt.initialize_2D_spiral(**params), params
+        )
     )
 
     # Matches the trajectory metadata example in README.md exactly.
     params = {"Nc": 256, "Ns": 256, "in_out": True, "nb_revolutions": 10}
     manifest.append(
-        _write_trajectory("spiral_2d_256_standard", mt.initialize_2D_spiral(**params), params)
+        _write_trajectory(
+            "spiral_2d_256_standard", mt.initialize_2D_spiral(**params), params
+        )
+    )
+
+    params = {"Nc": 512, "Ns": 512, "in_out": True, "nb_revolutions": 12}
+    manifest.append(
+        _write_trajectory(
+            "spiral_2d_512_standard", mt.initialize_2D_spiral(**params), params
+        )
     )
 
     # Kept deliberately small (n_samples=1024, not a realistic Nyquist density
-    # for a 64x64x44 image) so the exact-NDFT accuracy reference for this
-    # scenario (per README's reference selection table: image <=128^3 -> NDFT)
-    # stays tractable. The dense NDFT matrix is n_samples * n_voxels
-    # (180224 voxels here) complex64 elements, plus a same-sized float64
-    # intermediate during construction - at the full Nyquist sample count
-    # (~180k) that's >200GB and OOM-kills; even an intermediate 8192-sample
-    # version (~24GB peak) got OOM-killed on this 32GB machine. What matters
-    # here is a consistent, fast, comparable trajectory across backends, not
-    # reconstruction-grade sampling density.
+    # for a 64x64x44 image). What matters here is a consistent, fast,
+    # comparable trajectory across backends, not reconstruction-grade
+    # sampling density.
     base_params = {"Nc": 4, "Ns": 64, "in_out": True, "nb_revolutions": 8}
     base = mt.initialize_2D_spiral(**base_params)
     params = {**base_params, "nb_stacks": 4}
@@ -80,10 +89,20 @@ def generate_trajectories() -> list[dict]:
         _write_trajectory("sos_3d_192_standard", mt.stack(base, nb_stacks=128), params)
     )
 
+    # nb_stacks=176 matches mri_setup 3d_l's nz, same convention as 3D-M above.
+    base_params = {"Nc": 128, "Ns": 256, "in_out": True, "nb_revolutions": 12}
+    base = mt.initialize_2D_spiral(**base_params)
+    params = {**base_params, "nb_stacks": 176}
+    manifest.append(
+        _write_trajectory("sos_3d_256_standard", mt.stack(base, nb_stacks=176), params)
+    )
+
     # Available diagnostic asset, not part of the default scenario list.
     params = {"Nc": 512, "Ns": 512, "in_out": False}
     manifest.append(
-        _write_trajectory("radial_2d_512_standard", mt.initialize_2D_radial(**params), params)
+        _write_trajectory(
+            "radial_2d_512_standard", mt.initialize_2D_radial(**params), params
+        )
     )
 
     return manifest
@@ -132,21 +151,36 @@ def generate_smaps() -> list[dict]:
     SMAPS_DIR.mkdir(parents=True, exist_ok=True)
     manifest: list[dict] = []
 
-    ncoils, image_size = 8, (256, 256)
-    smaps = _birdcage_maps((ncoils, *image_size), nzz=ncoils)
-    path = SMAPS_DIR / "smaps_2d_256_v1.npy"
-    np.save(path, smaps)
-    print(f"wrote {path} shape={smaps.shape}")
-    manifest.append(
-        {
-            "smaps_id": "smaps_2d_256_v1",
-            "asset_version": ASSET_VERSION,
-            "generation_method": "birdcage",
-            "ncoils": ncoils,
-            "image_size": list(image_size),
-            "checksum_sha256": _sha256(path),
-        }
-    )
+    for smaps_id, ncoils, image_size in [
+        ("smaps_2d_256_v1", 8, (256, 256)),
+        ("smaps_2d_256_32coils_v1", 32, (256, 256)),
+        ("smaps_2d_128_8coils_v1", 8, (128, 128)),
+        ("smaps_2d_128_32coils_v1", 32, (128, 128)),
+        # Matches mri_setup 3d_m_32coils' image_size - the 3D coil-scaling
+        # counterpart to the 2D 8-coil/32-coil pair above.
+        ("smaps_3d_192_32coils_v1", 32, (192, 192, 128)),
+        ("smaps_3d_192_8coils_v1", 8, (192, 192, 128)),
+        ("smaps_3d_64_8coils_v1", 8, (64, 64, 44)),
+        ("smaps_3d_64_32coils_v1", 32, (64, 64, 44)),
+        ("smaps_2d_512_8coils_v1", 8, (512, 512)),
+        ("smaps_2d_512_32coils_v1", 32, (512, 512)),
+        ("smaps_3d_256_8coils_v1", 8, (256, 256, 176)),
+        ("smaps_3d_256_32coils_v1", 32, (256, 256, 176)),
+    ]:
+        smaps = _birdcage_maps((ncoils, *image_size), nzz=ncoils)
+        path = SMAPS_DIR / f"{smaps_id}.npy"
+        np.save(path, smaps)
+        print(f"wrote {path} shape={smaps.shape}")
+        manifest.append(
+            {
+                "smaps_id": smaps_id,
+                "asset_version": ASSET_VERSION,
+                "generation_method": "birdcage",
+                "ncoils": ncoils,
+                "image_size": list(image_size),
+                "checksum_sha256": _sha256(path),
+            }
+        )
     return manifest
 
 

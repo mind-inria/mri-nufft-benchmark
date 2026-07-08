@@ -1,10 +1,9 @@
 """BenchmarkSuite: runtime + accuracy.
 
-The reference output (NDFT or high-precision FINUFFT, per README's reference
-backend selection table) depends only on the scenario (trajectory, mri_setup,
-action) - not on the backend under test - and is cached in-process so
-comparing N backends against the same scenario doesn't recompute an
-expensive reference N times.
+The reference output (high-precision FINUFFT) depends only on the scenario
+(trajectory, mri_setup, action) - not on the backend under test - and is
+cached in-process so comparing N backends against the same scenario doesn't
+recompute an expensive reference N times.
 
 Precision: test vectors for the backend under test are complex64; the
 reference is computed internally in complex128 from the same seed, then cast
@@ -18,7 +17,12 @@ from typing import Any
 
 import numpy as np
 
-from benchmark.backends.registry import build_operator, to_numpy, to_operator_array
+from benchmark.backends.registry import (
+    build_operator,
+    to_numpy,
+    to_operator_array,
+    to_resident_array,
+)
 from benchmark.config import BenchmarkConfig
 from benchmark.suites.base import ValidationResult
 
@@ -63,14 +67,6 @@ def _load_smaps(repo_root: Path, mri_setup_config) -> np.ndarray | None:
     return np.load(repo_root / mri_setup_config.smaps_asset)
 
 
-def uses_ndft_reference(image_size: tuple[int, ...]) -> bool:
-    """True if the accuracy reference for this image size is the exact NDFT
-    rather than high-eps FINUFFT (see README's reference backend selection
-    table). Reused by run.py to fill the `reference_backend` raw column.
-    """
-    return int(np.prod(image_size)) <= 128 ** len(image_size)
-
-
 def _apply_action(operator, action: str, x: np.ndarray, y: np.ndarray) -> np.ndarray:
     if action == "forward":
         return to_numpy(operator.op(to_operator_array(x, operator)))
@@ -93,14 +89,14 @@ def _reference_output(
         config.mri_setup.ncoils,
         config.mri_setup.smaps,
         config.action.name,
+        config.reference.backend,
+        tuple(sorted(config.reference.parameters.items())),
     )
     if key in _REFERENCE_CACHE:
         return _REFERENCE_CACHE[key]
 
-    backend_name = (
-        "numpy" if uses_ndft_reference(image_size) else config.reference.backend
-    )
-    params = {} if backend_name == "numpy" else config.reference.parameters
+    backend_name = config.reference.backend
+    params = config.reference.parameters
     # FINUFFT's internal working precision follows the trajectory samples'
     # dtype, not the image data's - upcast to float64 so a high-eps FINUFFT
     # reference (e.g. eps=1e-12) is actually achievable rather than silently
@@ -135,9 +131,12 @@ def _reference_output(
 def _adjointness_error(operator, x: np.ndarray, y: np.ndarray) -> float:
     ax = to_numpy(operator.op(to_operator_array(x, operator)))
     aty = to_numpy(operator.adj_op(to_operator_array(y, operator)))
-    lhs = np.vdot(ax, y)
-    rhs = np.vdot(x, aty)
-    return float(abs(lhs - rhs) / (np.linalg.norm(ax) * np.linalg.norm(y)))
+    # x/y may be GPU-resident (input_location=device) - this check runs
+    # outside the timed call, so bring everything to numpy for it.
+    x_np, y_np = to_numpy(x), to_numpy(y)
+    lhs = np.vdot(ax, y_np)
+    rhs = np.vdot(x_np, aty)
+    return float(abs(lhs - rhs) / (np.linalg.norm(ax) * np.linalg.norm(y_np)))
 
 
 class BenchmarkSuiteImpl:
@@ -167,13 +166,24 @@ class BenchmarkSuiteImpl:
         }
 
         if config.action.name != "operator_init":
-            state["operator"] = build_operator(
+            operator = build_operator(
                 config.backend,
                 trajectory=trajectory,
                 image_size=image_size,
                 ncoils=config.mri_setup.ncoils,
                 smaps=smaps,
             )
+            state["operator"] = operator
+
+            # input_location=device: stage the test vector under test onto
+            # the GPU once here, outside the timed call - see registry.py's
+            # to_resident_array. Config validation guarantees this only
+            # happens for forward/adjoint on a cuda backend.
+            if config.input_location.name == "device":
+                if config.action.name == "forward":
+                    state["x"] = to_resident_array(state["x"], operator)
+                elif config.action.name == "adjoint":
+                    state["y"] = to_resident_array(state["y"], operator)
 
         return state
 
@@ -217,9 +227,18 @@ class BenchmarkSuiteImpl:
         ).astype(np.complex64)
         output = np.asarray(result).astype(np.complex64)
 
+        reference_norm = np.linalg.norm(reference)
+        reference_max = np.max(np.abs(reference))
+        if reference_norm == 0 or reference_max == 0:
+            raise ValueError(
+                f"reference output for action={action!r} is all-zero - cannot "
+                "compute a relative error; this indicates a broken scenario "
+                "(e.g. empty trajectory or smaps), not a real accuracy result"
+            )
+
         diff = output - reference
-        relative_l2 = float(np.linalg.norm(diff) / np.linalg.norm(reference))
-        relative_linf = float(np.max(np.abs(diff)) / np.max(np.abs(reference)))
+        relative_l2 = float(np.linalg.norm(diff) / reference_norm)
+        relative_linf = float(np.max(np.abs(diff)) / reference_max)
 
         adjointness = None
         if action in ("forward", "adjoint"):
