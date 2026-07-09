@@ -5,6 +5,25 @@ Benchmark repository: https://github.com/mind-inria/mri-nufft-benchmark
 
 ---
 
+## Quick install
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/mind-inria/mri-nufft-benchmark/main/scripts/setup.sh | sh
+```
+
+Self-contained: creates a `mri-nufft-benchmark-workspace/` folder (override
+with `WORKSPACE_DIR=...`) and clones this repo plus the two sibling repos its
+`pyproject.toml` needs as editable path dependencies (`mri-nufft`,
+`finufft`/`cufinufft`) as siblings inside it, then runs `uv sync` and
+pre-generates the trajectory/smaps assets. `uv` is only installed if not
+already on `PATH`, and then only into that workspace folder (no changes to
+your system `PATH` or shell profile) — nothing is touched outside the
+workspace directory. See `how-to.md` for details and manual steps (e.g. if
+you already have the sibling repos checked out elsewhere, or want to run it
+from inside an existing checkout via `./scripts/setup.sh`).
+
+---
+
 ## Overview
 
 This benchmark provides a reproducible and fair comparison of MRI NUFFT

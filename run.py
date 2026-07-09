@@ -173,7 +173,7 @@ def main(cfg: DictConfig) -> None:
     else:
         rows = _run_memory_suite(config, repo_root, git_sha)
 
-    writer = ResultWriter(repo_root / "benchmark_results")
+    writer = ResultWriter(repo_root / config.results_dir)
     run_id = writer.write(
         rows, OmegaConf.to_container(cfg, resolve=True), hardware_info
     )

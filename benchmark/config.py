@@ -100,6 +100,7 @@ class BenchmarkConfig:
         default_factory=lambda: InputLocationConfig(name="host")
     )
     suite: str = "benchmark"  # "benchmark" or "memory"
+    results_dir: str = "benchmark_results"
 
     def __post_init__(self) -> None:
         if self.trajectory.ndim != self.mri_setup.ndim:

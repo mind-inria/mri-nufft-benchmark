@@ -1,0 +1,4 @@
+warmup_min_iters: 2
+warmup_min_seconds: 0.5
+min_runtime_budget_s: 3.0
+max_repetitions: 20

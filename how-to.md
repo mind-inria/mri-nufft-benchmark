@@ -2,6 +2,20 @@
 
 ## 1. Environment
 
+Fastest path, from scratch - creates a `mri-nufft-benchmark-workspace/`
+folder, clones this repo plus the `mri-nufft` and `finufft` sibling repos its
+`pyproject.toml` needs as editable path dependencies as siblings inside it,
+syncs, and generates assets. Self-contained: `uv` is only installed (into
+that workspace folder, not system-wide) if not already on `PATH` - see
+README's "Quick install":
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/mind-inria/mri-nufft-benchmark/main/scripts/setup.sh | sh
+```
+
+Or, from an existing checkout with the sibling repos already in place next
+to it:
+
 ```bash
 uv venv
 uv sync
@@ -153,7 +167,34 @@ CPU-first then GPU, with a shaded band marking the boundary. It's fully
 self-contained (Plotly is embedded inline) — no network access needed to
 view it.
 
-## 7. Publishing results
+## 7. Quick backend comparison
+
+A fast alternative to the full matrix (step 5-6), for "where do the backends
+currently stand relative to each other" (e.g. after bumping mri-nufft or a
+backend's version) without a day-long run:
+
+```bash
+./scripts/run_quick.sh
+open benchmark_results_quick/quick_report.html
+```
+
+This runs 2 scenarios (`spiral_2d_256_standard`/`2d_m_8coils` and
+`sos_3d_64_standard`/`3d_s_8coils`) x all 7 backends x `forward`/`adjoint`
+only, with a short 3s/20-rep measurement budget (`benchmark=quick`) instead
+of the default 30s/200-rep. No memory suite, no GPU-resident-input sweep -
+this is a runtime/accuracy smoke comparison, not a substitute for the full
+matrix.
+
+Results are written to `benchmark_results_quick/` (`results_dir=...`
+override), a separate directory from the full matrix's
+`benchmark_results/` - this matters because the dedup step that regenerates
+the summary table keeps only the *latest* run of each (backend, action,
+scenario) combination, regardless of measurement budget; mixing the two
+would let a 3s quick run silently supersede a 30s full-matrix run of the
+same combination. `quick_report.html` is a single flat page (runtime chart +
+speedup table + run details), not the full report's tabbed dashboard.
+
+## 8. Publishing results
 
 `benchmark_results/` is gitignored — don't commit it directly. To publish a
 result set, copy the relevant `raw/` + `metadata/` files into a tagged GitHub
