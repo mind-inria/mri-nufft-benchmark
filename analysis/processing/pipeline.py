@@ -9,9 +9,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from analysis.loaders.raw import load_raw
+from analysis.processing.dedup import keep_latest_runs
 from analysis.processing.pareto import build_pareto
 from analysis.processing.scaling import build_scaling
-from analysis.processing.summary import build_summary
+from analysis.processing.summary import DEDUP_GROUP_COLS, build_summary
 
 
 def run_pipeline(results_dir: Path) -> None:
@@ -20,6 +21,7 @@ def run_pipeline(results_dir: Path) -> None:
     processed_dir.mkdir(parents=True, exist_ok=True)
 
     raw = load_raw(results_dir)
+    raw = keep_latest_runs(raw, DEDUP_GROUP_COLS)
     summary = build_summary(raw)
     pareto = build_pareto(summary)
     scaling = build_scaling(summary)

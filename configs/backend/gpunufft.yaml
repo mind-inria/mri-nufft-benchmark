@@ -2,4 +2,4 @@ name: gpunufft
 device: cuda
 framework: cupy
 parameters:
-  eps: 1.0e-3
+  eps: 1.0e-6

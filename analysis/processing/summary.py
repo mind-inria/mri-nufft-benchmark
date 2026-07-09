@@ -25,6 +25,17 @@ GROUP_COLS = [
     "n_samples",
 ]
 
+# GROUP_COLS minus backend_version - used to decide "is this a rerun of the
+# same benchmark" (see analysis.processing.dedup). backend_version is an
+# observed attribute of a run, not an input chosen when launching it: a
+# package upgrade between two runs of the same (backend, action, scenario)
+# still means the newer run should fully supersede the older one, not sit
+# alongside it as a separate "latest for that version" - otherwise a stale
+# pre-upgrade run keeps surviving dedup forever and downstream code that
+# joins/looks up by scenario (ignoring backend_version, e.g. scaling.py)
+# silently cross-multiplies or arbitrarily picks between the two.
+DEDUP_GROUP_COLS = [c for c in GROUP_COLS if c != "backend_version"]
+
 # input_location is excluded alongside action: operator_init rows are always
 # input_location=host, but must still join persistent_gpu_mb onto
 # forward/adjoint rows regardless of their input_location.

@@ -3,4 +3,5 @@ device: cuda
 framework: cupy
 parameters:
   eps: 1.0e-6
+  async_transfer: true
   gpu_device_id: 0

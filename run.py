@@ -15,6 +15,7 @@ from omegaconf import DictConfig, OmegaConf
 from benchmark.config import BenchmarkConfig, register_configs
 from benchmark.infra.hardware import collect_hardware_info
 from benchmark.infra.memory import MemoryProbe
+from benchmark.infra.synchronize import release_gpu_memory
 from benchmark.infra.writer import ResultWriter
 from benchmark.runner import BenchmarkRunner
 from benchmark.suites.benchmark import BenchmarkSuiteImpl
@@ -177,6 +178,12 @@ def main(cfg: DictConfig) -> None:
         rows, OmegaConf.to_container(cfg, resolve=True), hardware_info
     )
     print(f"wrote {len(rows)} rows for run_id={run_id}")
+
+    # This job's operator/state have gone out of scope by now (they only
+    # lived inside _run_*_suite's locals) - safe to hand the freed blocks
+    # back to the driver before Hydra's multirun launcher runs the next job
+    # in this same process. See release_gpu_memory's docstring.
+    release_gpu_memory(config.backend.framework, config.backend.device)
 
 
 if __name__ == "__main__":

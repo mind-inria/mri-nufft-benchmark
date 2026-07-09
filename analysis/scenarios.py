@@ -26,6 +26,14 @@ MULTICOIL_TRAJECTORY_IDS = {
     "sos_3d_256_standard",
 }
 
+# One reference (smallest) image size per family for the ncoils-scaling
+# plot. Every trajectory in MULTICOIL_TRAJECTORY_IDS has its own ncoils
+# variants, so plotting the whole family on one ncoils axis would overlay
+# several different-nx coil-sweeps as if they were a single line per
+# backend - holding nx fixed (mirroring how nx-scaling already holds
+# ncoils=1 fixed) keeps that line unambiguous.
+NCOILS_SCALING_TRAJECTORY_IDS = {"spiral_2d_128_standard", "sos_3d_64_standard"}
+
 # (trajectory_id, ncoils) -> short label, matching the scenario list in
 # README ("Benchmark Scenarios"). Ordering here is the display order for
 # per-scenario figures.
