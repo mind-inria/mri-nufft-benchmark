@@ -800,17 +800,20 @@ mri-nufft-benchmark/
 │
 ├── analysis/
 │   ├── __init__.py
-│   ├── loaders/
-│   │   ├── raw.py                 — load_raw(results_dir) → pl.DataFrame
-│   │   └── metadata.py            — load_metadata(results_dir)
+│   ├── loaders.py                 — load_raw(results_dir), load_metadata(results_dir)
 │   ├── processing/
 │   │   ├── summary.py             — build_summary
 │   │   ├── pareto.py              — build_pareto
 │   │   ├── scaling.py             — build_scaling
 │   │   └── pipeline.py            — run_pipeline(raw_dir, processed_dir)
-│   └── report.py                  — builds the single report.html
-│                                     (Pareto, scaling, action breakdown,
-│                                     memory — as tabs in one page)
+│   ├── figures/
+│   │   ├── common.py              — shared chart helpers (colors, capping, error bars)
+│   │   ├── breakdown.py           — per-scenario runtime/memory bar figures
+│   │   ├── scaling.py             — runtime/memory-vs-size line figure
+│   │   └── tables.py              — HTML detail/speedup tables
+│   └── report.py                  — assembles analysis.figures.* into the
+│                                     single report.html (tabbed page: Pareto,
+│                                     scaling, action breakdown, memory)
 │
 ├── configs/
 │   ├── run.yaml
@@ -847,7 +850,7 @@ suites don't know about files.** This keeps each piece testable with a small
 fixture, without spinning up a real benchmark.
 
 **File I/O is confined to three places:** `infra/writer.py` (writes raw
-results), `analysis/loaders/` (reads raw results), and `analysis/report.py`
+results), `analysis/loaders.py` (reads raw results), and `analysis/report.py`
 (writes HTML). Everything else operates on in-memory objects.
 
 **Adding a new backend** means a new YAML file in `configs/backend/` and a

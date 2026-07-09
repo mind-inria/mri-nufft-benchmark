@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from analysis.loaders.raw import load_raw
+from analysis.loaders import load_raw
 from analysis.processing.dedup import keep_latest_runs
 from analysis.processing.pareto import build_pareto
 from analysis.processing.scaling import build_scaling

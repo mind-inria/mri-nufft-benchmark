@@ -143,7 +143,7 @@ def _run_memory_suite(
         mem = probe.stop()
         # Key order must match _run_benchmark_suite's row_extra - raw
         # parquet files are concatenated across runs by column position, not
-        # just name (see analysis/loaders/raw.py), so the two suites must
+        # just name (see analysis/loaders.py), so the two suites must
         # agree on schema layout.
         return {
             "cpu_rss_mb": mem["cpu_rss_mb"],

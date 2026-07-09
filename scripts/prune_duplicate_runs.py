@@ -20,7 +20,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from analysis.loaders.raw import load_raw  # noqa: E402
+from analysis.loaders import load_raw  # noqa: E402
 from analysis.processing.dedup import latest_run_ids  # noqa: E402
 from analysis.processing.summary import DEDUP_GROUP_COLS  # noqa: E402
 
