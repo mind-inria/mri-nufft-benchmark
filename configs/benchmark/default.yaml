@@ -1,4 +1,4 @@
 warmup_min_iters: 3
 warmup_min_seconds: 1.0
-min_runtime_budget_s: 30.0
-max_repetitions: 200
+min_runtime_budget_s: 5.0
+max_repetitions: 10
